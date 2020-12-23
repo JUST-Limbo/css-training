@@ -62,6 +62,13 @@
 	border-top: 0;
 	border-left: 0;
 }
+/* 在设置两条线的变化 总体来说四条各个方向的 只需要改变一下两个伪元素的宽度和高度 */
+.container a:hover::before,
+.container a:hover::after {
+	width: 138px;
+	height: 58px;
+	transition-delay: 0s;
+}
 .container a:hover {
 	background-color: aqua;
 	color: #000;
@@ -73,11 +80,4 @@
 		linear-gradient(transparent, rgba(0, 0, 0, 0.3));
 	/* 设置一下以上属性的延迟时间 */
 	transition-delay: 0.4s;
-}
-/* 在设置两条线的变化 总体来说四条各个方向的 只需要改变一下两个伪元素的宽度和高度 */
-.container a:hover::before,
-.container a:hover::after {
-	width: 138px;
-	height: 58px;
-	transition-delay: 0s;
 }
