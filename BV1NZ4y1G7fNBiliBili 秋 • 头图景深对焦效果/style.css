@@ -17,7 +17,7 @@ header > div {
   display: flex;
   justify-content: center;
   align-items: center;
-  
+
   --offset: 0px;
   --blur: 2px;
 }
@@ -27,7 +27,7 @@ header > div > img {
   width: 110%;
   height: 100%;
   object-fit: cover;
-  
+
   transform: translatex(var(--offset));
   filter: blur(var(--blur));
 }
