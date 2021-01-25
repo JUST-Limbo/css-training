@@ -18,6 +18,7 @@ body {
   filter: blur(30px);
   animation: animate 1s linear infinite;
 }
+/* 旋转+渐变色 */
 @keyframes animate {
   0% {
     transform: rotate(0deg);
@@ -39,6 +40,7 @@ body {
   border-radius: 50%;
   z-index: 1000;
 }
+/* 阴影滤镜 */
 .loader::after {
   content: "";
   position: absolute;
