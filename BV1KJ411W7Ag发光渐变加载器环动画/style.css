@@ -29,19 +29,8 @@ body {
     filter: hue-rotate(360deg);
   }
 }
-.loader::before {
-  content: "";
-  position: absolute;
-  top: 6px;
-  bottom: 6px;
-  left: 6px;
-  right: 6px;
-  background: #000;
-  border-radius: 50%;
-  z-index: 1000;
-}
 /* 阴影滤镜 */
-.loader::after {
+.loader::before {
   content: "";
   position: absolute;
   top: 0px;
@@ -50,7 +39,15 @@ body {
   right: 0px;
   background: linear-gradient(45deg, transparent, transparent 40%, #e5f403);
   border-radius: 50%;
-  z-index: 1000;
-  z-index: 1;
   filter: blur(30px);
+}
+.loader::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  right: 6px;
+  background: #000;
+  border-radius: 50%;
 }
