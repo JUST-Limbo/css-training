@@ -1,0 +1,23 @@
+{
+  "id": "2380070",
+  "name": "221",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "18311491",
+      "name": "下  拉",
+      "font_class": "xiala",
+      "unicode": "e646",
+      "unicode_decimal": 58950
+    },
+    {
+      "icon_id": "2906314",
+      "name": "更多",
+      "font_class": "gengduo",
+      "unicode": "e8f9",
+      "unicode_decimal": 59641
+    }
+  ]
+}
