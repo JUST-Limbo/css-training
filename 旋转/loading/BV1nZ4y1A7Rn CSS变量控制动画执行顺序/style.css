@@ -1,0 +1,38 @@
+* {
+  margin: 0;
+  padding: 0;
+}
+body {
+  background: #333;
+}
+.main {
+  width: 30vw;
+  height: 30vh;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+.main span {
+  width: 8vw;
+  height: 8vw;
+  display: block;
+  float: left;
+  background: #333;
+  margin: 1vw;
+  border-radius: 1vw;
+  animation: light 2s linear infinite calc(0.25s*var(--s));
+}
+.hide {
+  visibility: hidden;
+}
+@keyframes light {
+  0%,100%{
+    background: #333;
+    box-shadow: 0 0 0 #333;
+  }
+  50% {
+    background: white;
+    box-shadow: 0 0 10px #3498db,0 0 20px #3498db,0 0 40px #3498db;
+  }
+}
