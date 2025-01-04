@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+        <style>
+            .box {
+                --color: #2955f6;
+                --radius: 14px;
+            }
+            .top {
+                height: 120px;
+                width: 300px;
+                background: var(--color);
+                border-radius: var(--radius) var(--radius) var(--radius) 0;
+            }
+            .bottom {
+                .box {
+                    --color: #2955f6;
+                    --radius: 14px;
+                }
+                .top {
+                    height: 120px;
+                    width: 300px;
+                    background: var(--color);
+                    border-radius: var(--radius) var(--radius) var(--radius) 0;
+                }
+                .bottom {
+                    display: inline-flex;
+                    height: 60px;
+                    width: 300px;
+                }
+
+                .bottom .left {
+                    position: relative;
+                    width: 50%;
+                    height: 100%;
+                    background: var(--color);
+                    border-radius: 0 0 var(--radius) var(--radius);
+                }
+
+                .bottom .left::after {
+                    content: '';
+                    right: -30px;
+                    top: -10px;
+                    width: calc(var(--radius) * 3);
+                    height: calc(var(--radius) * 3);
+                    position: absolute;
+                    background: var(--color);
+                }
+
+                .bottom .right {
+                    height: calc(100% - 10px);
+                    width: calc(50% - 10px);
+                    margin: 10px 0 0 10px;
+                    background: #061236;
+                    outline: 10px solid white;
+                    border-bottom-width: 0;
+                    border-right-width: 0;
+                    border-radius: var(--radius);
+                    box-sizing: border-box;
+                    z-index: 1;
+                }
+                display: inline-flex;
+                height: 60px;
+                width: 300px;
+            }
+
+            .bottom .left {
+                position: relative;
+                width: 50%;
+                height: 100%;
+                background: var(--color);
+                border-radius: 0 0 var(--radius) var(--radius);
+            }
+
+            .bottom .left::after {
+                content: '';
+                right: -30px;
+                top: -10px;
+                width: calc(var(--radius) * 3);
+                height: calc(var(--radius) * 3);
+                position: absolute;
+                background: var(--color);
+            }
+
+            .bottom .right {
+                height: calc(100% - 10px);
+                width: calc(50% - 10px);
+                margin: 10px 0 0 10px;
+                background: #061236;
+                outline: 10px solid white;
+                border-bottom-width: 0;
+                border-right-width: 0;
+                border-radius: var(--radius);
+                box-sizing: border-box;
+                z-index: 1;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="box">
+            <div class="top"></div>
+            <div class="bottom">
+                <div class="left"></div>
+                <div class="right"></div>
+            </div>
+        </div>
+    </body>
+</html>
