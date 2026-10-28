@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>DeepSeek</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: #ececee;
+      color: #1f1f1f;
+    }
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    .phone {
+      width: min(100%, 430px);
+      height: 100dvh;
+      margin: 0 auto;
+      background: #fff;
+      overflow: hidden;
+    }
+    /*
+      这种效果叫 push drawer，中文常叫推移式抽屉，也有人叫推移式侧边栏。
+      侧边栏和页面连在一起平移，页面被顶到旁边，露出的部分再盖一层遮罩。
+      这层遮罩在 Material Design 里叫 scrim。
+      off-canvas menu 通常有三种做法：盖在页面上的是 overlay，把页面顶开的是 push，
+      页面滑开后露出底下菜单的是 reveal。这里用的是 push。
+      百分比都相对手机栏。侧边栏宽 78%，聊天页用 margin-left 排在它右边。
+      轨道默认 translateX(-78%)，打开后回到 0，两边一起移动。
+    */
+    .stage {
+      position: relative;
+      height: 100%;
+      transform: translateX(-78%);
+      transition: transform 0.28s ease;
+    }
+    .stage.open { transform: translateX(0); }
+    .chat {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      margin-left: 78%;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      box-shadow: -12px 0 24px rgba(0, 0, 0, 0.16);
+    }
+    .chat-body {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    .mask {
+      position: absolute;
+      inset: 0;
+      border: 0;
+      padding: 0;
+      background: rgba(0, 0, 0, 0.35);
+      z-index: 2;
+    }
+    .topbar {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      border-bottom: 1px solid #f0f0f0;
+      flex-shrink: 0;
+    }
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #222;
+      display: grid;
+      place-items: center;
+    }
+    .icon-btn:active { background: #f2f2f2; }
+    .title {
+      margin: 0;
+      font-size: 17px;
+      font-weight: 600;
+    }
+    .list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 14px 8px;
+    }
+    .msg { display: flex; margin-bottom: 14px; }
+    .msg.user { justify-content: flex-end; }
+    .bubble {
+      max-width: 82%;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg.user .bubble {
+      background: #4d6bfe;
+      color: #fff;
+      border-radius: 16px 16px 4px 16px;
+      padding: 10px 14px;
+    }
+    .msg.assistant .bubble { padding: 2px 0; }
+    .composer {
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+      border-top: 1px solid #f0f0f0;
+    }
+    textarea {
+      flex: 1;
+      border: 1px solid #e6e6e6;
+      background: #f7f7f8;
+      border-radius: 20px;
+      padding: 10px 14px;
+      resize: none;
+      outline: none;
+      max-height: 120px;
+      field-sizing: content;
+    }
+    textarea:focus { border-color: #c5d0ff; background: #fff; }
+    .send {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 50%;
+      background: #4d6bfe;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .send:disabled { background: #d8d8d8; }
+    .drawer {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 78%;
+      background: #f6f7f9;
+      display: flex;
+      flex-direction: column;
+      padding: 18px 12px 12px;
+    }
+    .drawer-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .brand { margin: 0 8px; font-size: 18px; }
+    .new-chat {
+      margin: 0 4px 16px;
+      height: 40px;
+      border: 1px solid #d9def7;
+      border-radius: 10px;
+      background: #fff;
+      color: #4d6bfe;
+    }
+    .group-label {
+      margin: 0 8px 8px;
+      font-size: 12px;
+      color: #888;
+    }
+    .history { flex: 1; overflow-y: auto; }
+    .session {
+      width: 100%;
+      text-align: left;
+      border: 0;
+      background: transparent;
+      border-radius: 8px;
+      padding: 10px 8px;
+      color: #333;
+    }
+    .session.active { background: #fff; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="stage" id="stage">
+      <aside class="drawer" id="drawer" inert>
+        <div class="drawer-top">
+          <h2 class="brand">DeepSeek</h2>
+          <button class="icon-btn" id="closeDrawer" type="button" aria-label="关闭侧边栏">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+              <path d="M6 6l8 8M14 6l-8 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+        <button class="new-chat" id="newChat" type="button">开启新对话</button>
+        <p class="group-label">最近对话</p>
+        <div class="history" id="history"></div>
+      </aside>
+      <div class="chat">
+        <div class="chat-body" id="chatBody">
+          <header class="topbar">
+            <button class="icon-btn" id="openDrawer" type="button" aria-label="打开侧边栏">
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <h1 class="title">DeepSeek</h1>
+          </header>
+          <main class="list" id="list"></main>
+          <form class="composer" id="composer">
+            <textarea id="draft" rows="1" placeholder="给 DeepSeek 发送消息"></textarea>
+            <button class="send" id="send" type="submit" disabled aria-label="发送">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M8 13V3M8 3L3.5 7.5M8 3l4.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </form>
+        </div>
+        <button class="mask" id="mask" type="button" hidden aria-label="关闭侧边栏"></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * 等待指定毫秒，用来模拟助手回复前的短延迟。
+     * 典型用法：await wait(400)
+     * 边界：ms 小于等于 0 时，仍要等到当前调用栈结束后才会继续。
+     */
+    function wait(ms) {
+      return new Promise(function (resolve) {
+        setTimeout(resolve, ms)
+      })
+    }
+
+    const stage = document.getElementById("stage")
+    const drawer = document.getElementById("drawer")
+    const chatBody = document.getElementById("chatBody")
+    const mask = document.getElementById("mask")
+    const history = document.getElementById("history")
+    const list = document.getElementById("list")
+    const draft = document.getElementById("draft")
+    const sendButton = document.getElementById("send")
+
+    const buckets = {
+      1: [
+        { role: "user", text: "做一个手机聊天页，要哪些部分？" },
+        { role: "assistant", text: "三块就够：左上角开关拉开侧边栏，中间放问答消息，底部放输入框。" }
+      ],
+      2: [
+        { role: "user", text: "flex 布局怎么让列表占满剩余高度？" },
+        { role: "assistant", text: "外层设成纵向 flex，消息列表 flex: 1，并允许它自己滚动。" }
+      ]
+    }
+    const sessions = [
+      { id: 1, title: "做一个手机聊天页" },
+      { id: 2, title: "flex 布局怎么让列表占满剩余高度" }
+    ]
+    let currentId = 1
+    let drawerOpen = false
+    let sending = false
+
+    function setDrawer(open) {
+      drawerOpen = open
+      stage.classList.toggle("open", open)
+      mask.hidden = open === false
+      drawer.inert = open === false
+      chatBody.inert = open
+    }
+
+    function renderSessions() {
+      history.replaceChildren()
+      for (let i = 0; i < sessions.length; i++) {
+        const item = sessions[i]
+        const button = document.createElement("button")
+        button.type = "button"
+        button.className = "session"
+        button.textContent = item.title
+        button.dataset.id = String(item.id)
+        if (item.id === currentId) button.classList.add("active")
+        history.appendChild(button)
+      }
+    }
+
+    function renderMessages() {
+      list.replaceChildren()
+      const items = buckets[currentId]
+      for (let i = 0; i < items.length; i++) {
+        const row = document.createElement("div")
+        row.className = "msg " + items[i].role
+        const bubble = document.createElement("div")
+        bubble.className = "bubble"
+        bubble.textContent = items[i].text
+        row.appendChild(bubble)
+        list.appendChild(row)
+      }
+      list.scrollTop = list.scrollHeight
+    }
+
+    function syncSendButton() {
+      sendButton.disabled = draft.value.trim() === "" || sending
+    }
+
+    function openSession(id) {
+      currentId = id
+      setDrawer(false)
+      renderSessions()
+      renderMessages()
+    }
+
+    function createChat() {
+      const id = Date.now()
+      sessions.unshift({ id: id, title: "新对话" })
+      buckets[id] = [{ role: "assistant", text: "新对话已开始，直接在下方输入即可。" }]
+      openSession(id)
+    }
+
+    async function send() {
+      const text = draft.value.trim()
+      if (text === "" || sending) return
+      for (let i = 0; i < sessions.length; i++) {
+        if (sessions[i].id === currentId && sessions[i].title === "新对话") {
+          sessions[i].title = text.slice(0, 18)
+          renderSessions()
+          break
+        }
+      }
+      buckets[currentId].push({ role: "user", text: text })
+      draft.value = ""
+      sending = true
+      syncSendButton()
+      renderMessages()
+      await wait(400)
+      buckets[currentId].push({
+        role: "assistant",
+        text: "收到：「" + text + "」。这是本地骨架回复，没有请求接口。"
+      })
+      sending = false
+      syncSendButton()
+      renderMessages()
+    }
+
+    document.getElementById("openDrawer").addEventListener("click", function () {
+      setDrawer(true)
+    })
+    document.getElementById("closeDrawer").addEventListener("click", function () {
+      setDrawer(false)
+    })
+    mask.addEventListener("click", function () {
+      setDrawer(false)
+    })
+    document.getElementById("newChat").addEventListener("click", createChat)
+    history.addEventListener("click", function (event) {
+      const button = event.target.closest("button")
+      if (!button || button.dataset.id === undefined) return
+      openSession(Number(button.dataset.id))
+    })
+    draft.addEventListener("input", syncSendButton)
+    draft.addEventListener("keydown", function (event) {
+      if (event.key === "Enter" && event.shiftKey === false) {
+        event.preventDefault()
+        send()
+      }
+    })
+    document.getElementById("composer").addEventListener("submit", function (event) {
+      event.preventDefault()
+      send()
+    })
+
+    renderSessions()
+    renderMessages()
+  </script>
+</body>
+</html>
